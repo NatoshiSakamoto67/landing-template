@@ -18,6 +18,10 @@ window.TENANT = {
   farbeBlau: "#146DAB",
   farbeOrange: "#FBAF3A",
 
+  /* DESIGN-PAKET + SCHRIFT (White-Label) */
+  theme: "papier", // papier | stahl | glas | edel | minimal
+  font: "fraunces", // "" = Theme-Standard | fraunces | playfair | space | inter | oswald
+
   /* KONTAKT */
   telefon: "+49 1511 8553899",
   whatsapp: "4915118553899", // international, ohne + / ohne fuehrende 0

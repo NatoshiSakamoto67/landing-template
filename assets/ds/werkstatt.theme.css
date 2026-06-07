@@ -1,0 +1,571 @@
+/* =============================================================================
+ *  werkstatt.theme.css — EINE Theme-Datei (2026 Best-Practice)
+ * -----------------------------------------------------------------------------
+ *  Ersetzt das alte 5-Dateien-link-swap-System (papier/stahl/glas/edel/minimal).
+ *  Themes werden NICHT mehr per <link> getauscht, sondern per Attribut am <html>:
+ *
+ *      <html data-theme="papier">   (oder stahl | glas | edel | minimal)
+ *
+ *  papier ist der :root-Default (data-theme weglassbar).
+ *
+ * -----------------------------------------------------------------------------
+ *  GEMEINSAMER TOKEN-KONTRAKT  --ds-*
+ *  Diese Datei DEFINIERT die Tokens, Produkte (Werkhof, Kundenportal,
+ *  Landing-Template) KONSUMIEREN ausschliesslich --ds-* — nie die internen
+ *  theme-spezifischen Variablen.
+ *
+ *    Flaechen   --ds-bg --ds-surface --ds-surface-2
+ *    Text       --ds-text --ds-text-soft
+ *    Linien     --ds-line --ds-line-2
+ *    Akzent     --ds-accent --ds-accent-2 --ds-accent-hover
+ *               --ds-accent-soft --ds-on-accent
+ *    Schrift    --ds-font-display --ds-font-body
+ *    Form       --ds-radius --ds-radius-lg --ds-shadow
+ *    Atmosphaere--ds-texture  (background-image | none)
+ *
+ * -----------------------------------------------------------------------------
+ *  AKZENT-AUTOMATIK
+ *  Aus EINER Kundenfarbe --cust-accent wird die komplette Akzent-Palette
+ *  algorithmisch abgeleitet (color-mix in oklch). Setzt der Kunde nichts,
+ *  greift der theme-eigene Default-Akzent.
+ *
+ *      <html style="--cust-accent:#C2185B">   →  Palette rechnet sich neu
+ *
+ *  SCHRIFT-AUTOMATIK
+ *  --cust-font (Display) / --cust-font-body (Body) ueberschreiben analog
+ *  den theme-eigenen Default-Stack.
+ *
+ * -----------------------------------------------------------------------------
+ *  INHALT
+ *    1. Akzent-Automatik-Engine (theme-unabhaengig, color-mix/contrast-color)
+ *    2. @supports-Fallbacks (color-mix / contrast-color / light-dark)
+ *    3. :root  = Papier-Default  (warmes Off-White, Serif, Beleg-Papier)
+ *    4. [data-theme="stahl"]    Anthrazit / Stahl / Signal-Orange
+ *    5. [data-theme="glas"]     hell / translucent / Verlauf
+ *    6. [data-theme="edel"]     dunkel / Gold / Serif
+ *    7. [data-theme="minimal"]  Weiss / duenn / ohne Textur
+ *    8. prefers-color-scheme-Feinschliff (papier + glas auto-dunkel)
+ *    9. generische Helfer (box-sizing, focus, reduced-motion, .ds-*)
+ *
+ *  Reines CSS. KEINE externen CDNs, KEIN @font-face-Laden, KEIN Google-Fonts.
+ *  Fonts nur als family-Stacks mit System-Fallback. Animation ausschliesslich
+ *  ueber compositor-freundliche Properties (transform/opacity).
+ * ========================================================================== */
+
+/* =============================================================================
+ *  0. GLOBAL RESET-MINIMUM
+ * ========================================================================== */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+:where(html) { -webkit-text-size-adjust: 100%; }
+
+/* =============================================================================
+ *  1. AKZENT-AUTOMATIK — ENGINE
+ * -----------------------------------------------------------------------------
+ *  Jedes Theme definiert nur:
+ *     --ds-accent-base   (theme-eigener Default-Akzent als Fallback)
+ *     --ds-accent-2      (sekundaerer CI-Akzent)
+ *     --ds-mix-dark / --ds-mix-light   (Mix-Partner fuer hover/soft je nach
+ *                                        Hell-/Dunkel-Theme; in :root vorbelegt)
+ *  Diese Engine-Regel leitet daraus die Palette ab. Sie steht NACH den
+ *  Theme-Bloecken via @layer-Trick? Nein: wir nutzen Custom-Property-Kaskade —
+ *  --ds-accent referenziert --cust-accent ODER --ds-accent-base. Da Custom
+ *  Properties bei der Verwendung (nicht Definition) aufgeloest werden, gilt
+ *  immer der theme-spezifische --ds-accent-base, der pro [data-theme] gesetzt
+ *  wird. Deshalb wird die Engine EINMAL in :root definiert und von allen
+ *  Themes geerbt.
+ * ========================================================================== */
+:root {
+  /* Kunden-Hooks (optional) — bleiben leer, bis der Kunde sie setzt. */
+  /* --cust-accent: <Kundenfarbe>; */
+  /* --cust-font: <Display-Stack>; */
+  /* --cust-font-body: <Body-Stack>; */
+
+  /* Mix-Partner: in Hell-Themes mischt soft Richtung Weiss, in Dunkel-Themes
+     Richtung der dunklen Flaeche. Themes ueberschreiben diese zwei bei Bedarf. */
+  --ds-mix-dark: black;
+  --ds-mix-light: white;
+
+  /* --- Abgeleitete Akzent-Palette (gilt fuer ALLE Themes) --- */
+  /* Primaer: Kundenfarbe, sonst theme-eigener Default */
+  --ds-accent: var(--cust-accent, var(--ds-accent-base));
+
+  /* Hover: 12 % dunkler — funktioniert auf hell wie dunkel */
+  --ds-accent-hover: color-mix(in oklch, var(--ds-accent), var(--ds-mix-dark) 12%);
+
+  /* Soft-Wash: stark aufgehellt fuer Flaechen/Chips/Focus-Ring */
+  --ds-accent-soft: color-mix(in oklch, var(--ds-accent), var(--ds-mix-light) 82%);
+
+  /* Lesbarer Text AUF dem Akzent — automatisch Schwarz/Weiss nach Kontrast.
+     Fallback unten via @supports, falls contrast-color nicht unterstuetzt. */
+  --ds-on-accent: #ffffff;
+  --ds-on-accent: contrast-color(var(--ds-accent));
+
+  /* Schrift-Automatik: Kunde > Theme-Default */
+  --ds-font-display: var(--cust-font, var(--ds-font-display-base));
+  --ds-font-body: var(--cust-font-body, var(--ds-font-body-base));
+}
+
+/* =============================================================================
+ *  2. @supports-FALLBACKS
+ * ========================================================================== */
+
+/* 2a. contrast-color() nicht unterstuetzt → heuristische On-Accent-Wahl.
+ *     Wir koennen Helligkeit nicht messen, also nehmen wir den sicheren
+ *     Default Weiss (#fff). Themes mit hellem Default-Akzent (minimal=#111,
+ *     papier/glas/stahl/edel) sind alle dunkel genug fuer weisse Schrift.
+ *     Kunden mit sehr hellem --cust-accent koennen --ds-on-accent manuell
+ *     auf #111 setzen. */
+@supports not (color: contrast-color(black)) {
+  :root { --ds-on-accent: #ffffff; }
+}
+
+/* 2b. color-mix() nicht unterstuetzt → hover/soft ohne Mix.
+ *     hover faellt auf den reinen Akzent zurueck (kein Crash), soft auf eine
+ *     neutrale, theme-passende Flaeche. Themes setzen --ds-accent-soft-fb. */
+@supports not (color: color-mix(in oklch, red, blue)) {
+  :root {
+    --ds-accent-hover: var(--ds-accent);
+    --ds-accent-soft: var(--ds-accent-soft-fb, #eef0f2);
+  }
+}
+
+/* 2c. oklch nicht unterstuetzt (sehr alt) → srgb-Mix als Naeherung. */
+@supports (color: color-mix(in oklch, red, blue)) {
+  /* moderner Pfad: nichts zu tun, Engine oben gilt */
+}
+@supports (color: color-mix(in srgb, red, blue)) and
+          (not (color: color-mix(in oklch, red, blue))) {
+  :root {
+    --ds-accent-hover: color-mix(in srgb, var(--ds-accent), black 12%);
+    --ds-accent-soft: color-mix(in srgb, var(--ds-accent), white 82%);
+  }
+}
+
+/* =============================================================================
+ *  3. :root  =  PAPIER (Default-Theme)
+ * -----------------------------------------------------------------------------
+ *  Werkstatt-Editorial / Beleg-Papier. Warmes Off-White, near-black Tinte,
+ *  CI-Blau primaer + CI-Orange sekundaer, Georgia-Serif, feine Papier-Faser-
+ *  Textur, leicht eckige Radien.
+ * ========================================================================== */
+:root,
+[data-theme="papier"] {
+  color-scheme: light;
+
+  /* Theme-Defaults fuer die Automatik (siehe Engine oben) */
+  --ds-accent-base: oklch(48.5% 0.12 248);     /* CI-Blau  ~ #146DAB */
+  --ds-accent-2: oklch(80% 0.135 73);          /* CI-Orange ~ #FBAF3A */
+  --ds-accent-soft-fb: #E6F0F8;                /* color-mix-Fallback */
+  --ds-mix-dark: black;
+  --ds-mix-light: white;
+
+  /* Flaechen */
+  --ds-bg: oklch(98.6% 0.006 95);              /* warmes Off-White ~ #FCFBF8 */
+  --ds-surface: oklch(96.2% 0.009 92);         /* tieferes Papier ~ #F6F3EC */
+  --ds-surface-2: oklch(93% 0.012 90);         /* Baender/Chips   ~ #E9E4DB */
+
+  /* Text */
+  --ds-text: oklch(22% 0.012 70);              /* fast-schwarze Tinte ~ #1C1A16 */
+  --ds-text-soft: oklch(46% 0.012 68);         /* gedaempfte Tinte    ~ #5A554B */
+
+  /* Linien */
+  --ds-line: oklch(88% 0.014 86);              /* Faser-Linie ~ #DED7C8 */
+  --ds-line-2: oklch(83% 0.018 84);            /* kraeftiger  ~ #CFC6B2 */
+
+  /* Schrift */
+  --ds-font-display-base: Georgia, "Times New Roman", "Times",
+    "Liberation Serif", serif;
+  --ds-font-body-base: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
+
+  /* Form */
+  --ds-radius: 5px;
+  --ds-radius-lg: 10px;
+  --ds-shadow: 0 1px 0 var(--ds-line),
+    0 18px 40px -28px oklch(22% 0.012 70 / 0.45);
+
+  /* Atmosphaere — feine Papier-Faser (Doppel-Punktraster, sehr subtil) */
+  --ds-texture:
+    radial-gradient(oklch(22% 0.012 70 / 0.035) 0.5px, transparent 0.6px),
+    radial-gradient(oklch(22% 0.012 70 / 0.022) 0.5px, transparent 0.6px);
+  --ds-texture-size: 3px 3px, 7px 7px;
+  --ds-texture-position: 0 0, 1px 2px;
+}
+
+/* =============================================================================
+ *  4. [data-theme="stahl"]  —  Industrial / Anthrazit
+ * -----------------------------------------------------------------------------
+ *  Dunkle Stahl-/Anthrazit-Flaechen, Signal-Orange-Akzent, schmale Grotesk,
+ *  sehr kantige Radien, Grid-Linien-Textur. Text hell.
+ * ========================================================================== */
+[data-theme="stahl"] {
+  color-scheme: dark;
+
+  --ds-accent-base: oklch(70% 0.20 47);        /* Safety-Orange ~ #ff6a00 */
+  --ds-accent-2: oklch(74% 0.085 235);         /* kuehles Stahl-Blau, sekundaer */
+  --ds-accent-soft-fb: #3a2a1c;
+  /* Dunkel-Theme: soft mischt Richtung Flaeche statt Weiss */
+  --ds-mix-dark: black;
+  --ds-mix-light: oklch(20% 0.01 250);
+
+  --ds-bg: oklch(20% 0.008 250);               /* Grundflaeche ~ #14171A */
+  --ds-surface: oklch(24.5% 0.009 250);        /* Karten       ~ #24292E */
+  --ds-surface-2: oklch(28% 0.01 250);         /* Panel/Kante  ~ #2F353B */
+
+  --ds-text: oklch(93.5% 0.006 240);           /* Primaertext ~ #E9EDF1 */
+  --ds-text-soft: oklch(74% 0.012 245);        /* Sekundaer   ~ #AAB3BC */
+
+  --ds-line: oklch(34% 0.012 248);             /* Linien ~ #3A4148 */
+  --ds-line-2: oklch(40% 0.013 248);           /* heller ~ #4A525A */
+
+  --ds-font-display-base: "Arial Narrow", "Roboto Condensed",
+    "Liberation Sans Narrow", "Helvetica Neue Condensed", "Oswald",
+    system-ui, sans-serif;
+  --ds-font-body-base: "Arial Narrow", "Roboto Condensed", system-ui,
+    -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --ds-radius: 2px;
+  --ds-radius-lg: 4px;
+  --ds-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.04),
+    0 18px 40px -26px oklch(0% 0 0 / 0.7);
+
+  /* Atmosphaere — technisches Grid + dezenter Top-Glow */
+  --ds-texture:
+    radial-gradient(120% 90% at 50% -10%, oklch(100% 0 0 / 0.045), transparent 60%),
+    linear-gradient(oklch(100% 0 0 / 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(100% 0 0 / 0.028) 1px, transparent 1px);
+  --ds-texture-size: auto, 32px 32px, 32px 32px;
+  --ds-texture-position: center top, center top, center top;
+}
+
+/* =============================================================================
+ *  5. [data-theme="glas"]  —  Glassmorphism / hell-translucent
+ * -----------------------------------------------------------------------------
+ *  Heller Verlaufs-Hintergrund mit weichen Lichtflecken, blauer Akzent,
+ *  gerundete Display-Schrift, grosse weiche Radien, weiche Schatten.
+ *  Hinweis: das eigentliche backdrop-filter-Glas baut das Produkt-CSS auf
+ *  --ds-surface (translucent) auf — hier liefern wir Tokens + Atmosphaere.
+ * ========================================================================== */
+[data-theme="glas"] {
+  color-scheme: light;
+
+  --ds-accent-base: oklch(60% 0.19 268);       /* lebendiges Blau ~ #4f7cff */
+  --ds-accent-2: oklch(72% 0.16 350);          /* Pink/Magenta, sekundaer */
+  --ds-accent-soft-fb: #e7ecff;
+  --ds-mix-dark: oklch(20% 0.08 268);
+  --ds-mix-light: white;
+
+  --ds-bg: oklch(96% 0.012 265);               /* heller Grund ~ #EEF2FB */
+  /* Karten translucent — Produkt legt backdrop-filter darueber */
+  --ds-surface: oklch(100% 0 0 / 0.42);
+  --ds-surface-2: oklch(100% 0 0 / 0.6);
+
+  --ds-text: oklch(24% 0.04 275);              /* ~ #161A2B */
+  --ds-text-soft: oklch(42% 0.04 275);         /* ~ #424A66 */
+
+  --ds-line: oklch(100% 0 0 / 0.62);           /* helle Glanzkante */
+  --ds-line-2: oklch(100% 0 0 / 0.9);          /* inset highlight */
+
+  --ds-font-display-base: ui-rounded, "SF Pro Rounded", system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+  --ds-font-body-base: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  --ds-radius: 14px;
+  --ds-radius-lg: 28px;
+  --ds-shadow: 0 18px 50px -16px oklch(28% 0.06 268 / 0.32),
+    inset 0 1px 0 oklch(100% 0 0 / 0.9);
+
+  /* Atmosphaere — weiche Licht-Blobs + feine Koernung als ein Layer */
+  --ds-texture:
+    radial-gradient(42rem 42rem at 12% -8%,
+      color-mix(in oklch, var(--ds-accent), transparent 66%), transparent 60%),
+    radial-gradient(38rem 38rem at 92% 6%,
+      oklch(75% 0.13 350 / 0.42), transparent 58%),
+    radial-gradient(46rem 46rem at 78% 104%,
+      color-mix(in oklch, var(--ds-accent), transparent 74%), transparent 60%),
+    radial-gradient(34rem 34rem at 4% 92%,
+      oklch(82% 0.1 175 / 0.4), transparent 60%),
+    linear-gradient(180deg, oklch(97% 0.01 265), oklch(94% 0.014 266));
+  --ds-texture-size: auto;
+  --ds-texture-position: center;
+  --ds-texture-attachment: fixed;
+}
+
+/* color-mix-Fallback fuer die Glas-Blobs (sonst faellt der Layer leer aus) */
+@supports not (color: color-mix(in oklch, red, blue)) {
+  [data-theme="glas"] {
+    --ds-texture:
+      radial-gradient(42rem 42rem at 12% -8%, rgba(79,124,255,0.34), transparent 60%),
+      radial-gradient(38rem 38rem at 92% 6%, rgba(255,138,196,0.42), transparent 58%),
+      radial-gradient(46rem 46rem at 78% 104%, rgba(79,124,255,0.26), transparent 60%),
+      radial-gradient(34rem 34rem at 4% 92%, rgba(120,224,210,0.4), transparent 60%),
+      linear-gradient(180deg, #f4f7ff, #e9eefb);
+  }
+}
+
+/* =============================================================================
+ *  6. [data-theme="edel"]  —  Dark Luxury / Gold-Serif
+ * -----------------------------------------------------------------------------
+ *  Tiefdunkle warme Flaechen, Brass/Gold-Akzent, Palatino-Serif, winzige
+ *  Radien, dezente Film-Grain-Webung als Textur.
+ * ========================================================================== */
+[data-theme="edel"] {
+  color-scheme: dark;
+
+  --ds-accent-base: oklch(73% 0.10 86);        /* Brass/Gold ~ #C8A24A */
+  --ds-accent-2: oklch(60% 0.045 60);          /* gedaempftes Kupfer, sekundaer */
+  --ds-accent-soft-fb: #2a2417;
+  --ds-mix-dark: black;
+  --ds-mix-light: oklch(18% 0.006 70);         /* soft Richtung dunkle Flaeche */
+
+  --ds-bg: oklch(16% 0.004 260);               /* page ~ #111316 */
+  --ds-surface: oklch(20% 0.006 260);          /* raised ~ #16191D */
+  --ds-surface-2: oklch(24% 0.008 258);        /* card  ~ #1C2026 */
+
+  --ds-text: oklch(92% 0.012 80);              /* warm white ~ #ECE8E1 */
+  --ds-text-soft: oklch(72% 0.012 78);         /* ~ #A7A39B */
+
+  --ds-line: oklch(100% 0 0 / 0.08);           /* hairline */
+  --ds-line-2: oklch(100% 0 0 / 0.14);         /* hairline strong */
+
+  --ds-font-display-base: "Iowan Old Style", "Palatino Linotype", Palatino,
+    "Book Antiqua", Georgia, "Times New Roman", serif;
+  --ds-font-body-base: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  --ds-radius: 2px;
+  --ds-radius-lg: 3px;
+  --ds-shadow: 0 24px 50px -28px oklch(0% 0 0 / 0.8),
+    0 0 40px -22px color-mix(in oklch, var(--ds-accent), transparent 66%);
+
+  /* Atmosphaere — Gold-Aura oben rechts + feine Film-Grain-Webung */
+  --ds-texture:
+    radial-gradient(1200px 620px at 78% -8%,
+      color-mix(in oklch, var(--ds-accent), transparent 78%), transparent 60%),
+    radial-gradient(900px 700px at -10% 110%, oklch(100% 0 0 / 0.04), transparent 62%),
+    repeating-linear-gradient(0deg, oklch(100% 0 0 / 0.012) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, oklch(13% 0.003 260), oklch(16% 0.004 260) 30%, oklch(13% 0.003 260));
+  --ds-texture-size: auto;
+  --ds-texture-position: center;
+  --ds-texture-attachment: fixed;
+}
+
+@supports not (color: color-mix(in oklch, red, blue)) {
+  [data-theme="edel"] {
+    --ds-shadow: 0 24px 50px -28px rgba(0,0,0,0.8), 0 0 40px -22px rgba(200,162,74,0.34);
+    --ds-texture:
+      radial-gradient(1200px 620px at 78% -8%, rgba(200,162,74,0.22), transparent 60%),
+      radial-gradient(900px 700px at -10% 110%, rgba(255,255,255,0.04), transparent 62%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 3px),
+      linear-gradient(180deg, #0d0f12, #111316 30%, #0d0f12);
+  }
+}
+
+/* =============================================================================
+ *  7. [data-theme="minimal"]  —  Swiss / Basic S-W
+ * -----------------------------------------------------------------------------
+ *  Reines Weiss, near-black Tinte, near-black Default-Akzent, duenne
+ *  System-Sans, Radius 0, Hairline-Linien, KEINE Textur.
+ * ========================================================================== */
+[data-theme="minimal"] {
+  color-scheme: light;
+
+  --ds-accent-base: oklch(20% 0 0);            /* near-black ~ #111111 */
+  --ds-accent-2: oklch(20% 0 0);               /* monochrom: identisch */
+  --ds-accent-soft-fb: #f0f0f0;
+  --ds-mix-dark: black;
+  --ds-mix-light: white;
+
+  --ds-bg: oklch(100% 0 0);                     /* reines Weiss */
+  --ds-surface: oklch(100% 0 0);               /* Karten = Weiss, Trennung via Linie */
+  --ds-surface-2: oklch(98% 0 0);              /* hover ~ #F5F5F5 */
+
+  --ds-text: oklch(13% 0 0);                   /* fast schwarz ~ #0A0A0A */
+  --ds-text-soft: oklch(38% 0 0);              /* ~ #444444 */
+
+  --ds-line: oklch(93.5% 0 0);                 /* Hairline ~ #ECECEC */
+  --ds-line-2: oklch(90% 0 0);                 /* etwas kraeftiger */
+
+  --ds-font-display-base: system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  --ds-font-body-base: system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+
+  --ds-radius: 0;
+  --ds-radius-lg: 0;
+  --ds-shadow: none;
+
+  /* Bewusst KEINE Textur */
+  --ds-texture: none;
+  --ds-texture-size: auto;
+  --ds-texture-position: center;
+}
+
+/* =============================================================================
+ *  8. prefers-color-scheme — auto-dunkel fuer die HELLEN Themes
+ * -----------------------------------------------------------------------------
+ *  Stahl/Edel sind bereits dunkel und reagieren NICHT auf das System-Schema.
+ *  Papier, Glas und Minimal kippen bei System-Dark-Mode in eine dunkle
+ *  Variante — Akzent-Automatik laeuft unveraendert weiter.
+ *  Greift nur, wenn der Kunde nicht explizit ein color-scheme erzwingt.
+ * ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  /* --- Papier dunkel: warmes Papier kippt zu warmem Anthrazit --- */
+  .auto-dark:root,
+  .auto-dark[data-theme="papier"] {
+    color-scheme: dark;
+    --ds-mix-light: oklch(22% 0.01 70);        /* soft mischt Richtung Flaeche */
+
+    --ds-bg: oklch(20% 0.008 70);              /* warmes dunkles Papier */
+    --ds-surface: oklch(24% 0.009 70);
+    --ds-surface-2: oklch(28% 0.01 70);
+    --ds-text: oklch(92% 0.008 85);
+    --ds-text-soft: oklch(72% 0.01 82);
+    --ds-line: oklch(33% 0.012 75);
+    --ds-line-2: oklch(40% 0.013 75);
+    --ds-shadow: 0 1px 0 oklch(100% 0 0 / 0.05),
+      0 18px 40px -28px oklch(0% 0 0 / 0.7);
+    --ds-texture:
+      radial-gradient(oklch(100% 0 0 / 0.03) 0.5px, transparent 0.6px),
+      radial-gradient(oklch(100% 0 0 / 0.02) 0.5px, transparent 0.6px);
+  }
+
+  /* --- Glas dunkel: heller Verlauf kippt zu tiefem Blau-Glas --- */
+  .auto-dark[data-theme="glas"] {
+    color-scheme: dark;
+    --ds-mix-light: oklch(24% 0.04 268);
+    --ds-bg: oklch(20% 0.03 268);
+    --ds-surface: oklch(100% 0 0 / 0.08);      /* dunkles Glas */
+    --ds-surface-2: oklch(100% 0 0 / 0.14);
+    --ds-text: oklch(94% 0.01 265);
+    --ds-text-soft: oklch(74% 0.02 265);
+    --ds-line: oklch(100% 0 0 / 0.14);
+    --ds-line-2: oklch(100% 0 0 / 0.22);
+    --ds-shadow: 0 18px 50px -16px oklch(0% 0 0 / 0.55),
+      inset 0 1px 0 oklch(100% 0 0 / 0.16);
+    --ds-texture:
+      radial-gradient(42rem 42rem at 12% -8%,
+        color-mix(in oklch, var(--ds-accent), transparent 70%), transparent 60%),
+      radial-gradient(40rem 40rem at 90% 8%, oklch(45% 0.14 350 / 0.4), transparent 60%),
+      radial-gradient(46rem 46rem at 80% 104%,
+        color-mix(in oklch, var(--ds-accent), transparent 78%), transparent 60%),
+      linear-gradient(180deg, oklch(22% 0.03 268), oklch(17% 0.03 268));
+  }
+
+  /* --- Minimal dunkel: invertiert zu Schwarz/Weiss --- */
+  .auto-dark[data-theme="minimal"] {
+    color-scheme: dark;
+    --ds-accent-base: oklch(96% 0 0);          /* near-white Akzent auf Schwarz */
+    --ds-accent-2: oklch(96% 0 0);
+    --ds-bg: oklch(12% 0 0);
+    --ds-surface: oklch(12% 0 0);
+    --ds-surface-2: oklch(16% 0 0);
+    --ds-text: oklch(96% 0 0);
+    --ds-text-soft: oklch(70% 0 0);
+    --ds-line: oklch(24% 0 0);
+    --ds-line-2: oklch(30% 0 0);
+  }
+}
+
+/* Wenn der Kunde light-dark() nutzen will, ist color-scheme bereits korrekt
+ * pro Theme gesetzt. Beispiel-Helfer fuer Produkt-CSS:
+ *   color: light-dark(var(--ds-text), var(--ds-text));
+ * Fallback fuer Browser ohne light-dark(): die --ds-*-Tokens sind ohnehin
+ * bereits final aufgeloest, light-dark() ist also optional. */
+@supports not (color: light-dark(#000, #fff)) {
+  /* nichts zu tun — --ds-* sind direkt nutzbar */
+  :root { --ds-supports-light-dark: 0; }
+}
+@supports (color: light-dark(#000, #fff)) {
+  :root { --ds-supports-light-dark: 1; }
+}
+
+/* =============================================================================
+ *  9. GENERISCHE HELFER  (keine produkt-spezifischen Klassen)
+ * -----------------------------------------------------------------------------
+ *  Nur Basis-Anbindung der --ds-* an <body> + a11y. Produkte bauen ihr
+ *  eigenes CSS auf den Tokens auf.
+ * ========================================================================== */
+
+/* Body verdrahtet Grund-Tokens. background-image = Theme-Textur. */
+:where(body) {
+  margin: 0;
+  background-color: var(--ds-bg);
+  background-image: var(--ds-texture, none);
+  background-size: var(--ds-texture-size, auto);
+  background-position: var(--ds-texture-position, 0 0);
+  background-attachment: var(--ds-texture-attachment, scroll);
+  background-repeat: no-repeat;
+  color: var(--ds-text);
+  font-family: var(--ds-font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Display-Schrift fuer Ueberschriften — Produkte koennen ueberschreiben. */
+:where(h1, h2, h3, .ds-display) {
+  font-family: var(--ds-font-display);
+}
+
+/* Text-Selektion im Akzent. */
+::selection {
+  background: var(--ds-accent);
+  color: var(--ds-on-accent);
+}
+
+/* Einheitlicher, sichtbarer Fokus-Ring (a11y). */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ds-accent);
+  outline-offset: 3px;
+  border-radius: var(--ds-radius);
+}
+
+/* --- Optionale generische Akzent-Helfer (utility, kein Produkt-CSS) --- */
+.ds-bg-accent { background: var(--ds-accent); color: var(--ds-on-accent); }
+.ds-bg-accent:hover { background: var(--ds-accent-hover); }
+.ds-bg-soft { background: var(--ds-accent-soft); color: var(--ds-text); }
+.ds-text-accent { color: var(--ds-accent); }
+.ds-surface { background: var(--ds-surface); }
+.ds-surface-2 { background: var(--ds-surface-2); }
+.ds-card {
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow);
+}
+.ds-divider { border: 0; border-top: 1px solid var(--ds-line); }
+
+/* =============================================================================
+ *  10. REDUCED MOTION (a11y) — fixed-attachment + Transitions zaehmen
+ * ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  :where(body) { background-attachment: scroll; }
+}
+
+
+/* === Akzent-Automatik (gewinnt die Kaskade: steht NACH allen [data-theme]-Bloecken) ===
+   Aus EINER Kundenfarbe (--ds-accent) werden Hover/Soft/On-Accent abgeleitet.
+   soft mischt Richtung --ds-bg -> theme-aware (hell wie dunkel). */
+@supports (color: color-mix(in oklch, red, blue)){
+  :root{
+    --ds-accent-hover: color-mix(in oklch, var(--ds-accent), black 14%);
+    --ds-accent-soft:  color-mix(in oklch, var(--ds-accent), var(--ds-bg) 86%);
+  }
+}
+@supports (color: contrast-color(black)){
+  :root{ --ds-on-accent: contrast-color(var(--ds-accent)); }
+}

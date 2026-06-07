@@ -1,0 +1,98 @@
+/* =============================================================================
+ *  landing-theme-adapter.css — Bruecke Landing-Token -> --ds-* (DS-Kontrakt)
+ * -----------------------------------------------------------------------------
+ *  Macht das Landing-Produkt theme-faehig OHNE template.css/modules.css zu
+ *  veraendern. Die Landing-CSS konsumiert weiter ihre eigenen Token-Namen
+ *  (--paper/--ink/--blau/--orange/--display/...); dieser Adapter setzt diese
+ *  Namen auf die gemeinsamen --ds-*-Tokens, die werkstatt.theme.css je
+ *  [data-theme] liefert.
+ *
+ *  LADE-REIHENFOLGE im <head>:
+ *    1) werkstatt.theme.css      (definiert --ds-* + [data-theme]-Bloecke)
+ *    2) fonts/fonts.css          (@font-face + --font-* Registry)
+ *    3) template.css / modules.css (unveraendert)
+ *    4) landing-theme-adapter.css (DIESE Datei — gewinnt ueber template.css)
+ *
+ *  whitelabel.js setzt zur Laufzeit --cust-accent / --cust-font; die Ableitung
+ *  (hover/soft/on-accent) macht werkstatt.theme.css. Dieser Adapter leitet
+ *  NICHTS ab — er bildet nur Namen ab, sonst gaebe es doppelte Ableitung.
+ * ========================================================================== */
+
+:root {
+  /* ---- Flaechen / Papier ---------------------------------------------- */
+  --paper:      var(--ds-bg);          /* Seiten-Hintergrund (body)        */
+  --paper-2:    var(--ds-surface-2);   /* weiche Sektionen: stats/konf/footer */
+  --paper-3:    var(--ds-surface);     /* tiefere Flaeche: nav-hover, chips */
+
+  /* Karten/Inputs nutzen in template.css ebenfalls --paper. Damit Karten
+   * sich vom Body-BG abheben, mappt der Adapter die Karten-Oberflaeche
+   * gezielt: siehe .card/.field/.chip/.acc-item-Overrides weiter unten.   */
+
+  /* ---- Tinte / Text --------------------------------------------------- */
+  --ink:        var(--ds-text);        /* Basis-Text / Headlines           */
+  --ink-soft:   var(--ds-text-soft);   /* sekundaerer Text (lede, panels)  */
+  --muted:      var(--ds-text-soft);   /* Meta/Labels (kein eigenes DS-Token -> text-soft) */
+
+  /* ---- Linien --------------------------------------------------------- */
+  --line:       var(--ds-line);
+  --line-2:     var(--ds-line-2);
+
+  /* ---- CI-Akzente ----------------------------------------------------- */
+  --blau:       var(--ds-accent);      /* Primaer: Buttons, Links, Akzent  */
+  --blau-deep:  var(--ds-accent-hover);/* Hover/Tiefe                      */
+  --orange:     var(--ds-accent-2);    /* Sekundaer: //-Signal, Warm-Btn   */
+  --orange-deep: color-mix(in oklab, var(--ds-accent-2) 78%, black); /* lesbares Orange auf Hell (kein eigenes DS-Token) */
+
+  /* ---- Typografie ----------------------------------------------------- */
+  --display:    var(--ds-font-display);
+  --body:       var(--ds-font-body);
+  /* --mono bleibt template-eigen (DS hat keinen Mono-Token) -> unveraendert */
+
+  /* ---- Radien --------------------------------------------------------- */
+  --radius:     var(--ds-radius);
+  --radius-lg:  var(--ds-radius-lg);
+  --radius-sm:  var(--ds-radius);      /* DS kennt nur radius/radius-lg     */
+
+  /* ---- Schatten ------------------------------------------------------- */
+  --shadow-soft: var(--ds-shadow);
+  --shadow-lift: var(--ds-shadow);     /* ein DS-Schatten-Token -> beide   */
+}
+
+/* ---------------------------------------------------------------------------
+ *  KORREKTUREN
+ * ------------------------------------------------------------------------- */
+
+/* 1) Karten/Inputs/Chips heben sich vom Body-BG ab. template.css setzt diese
+ *    auf var(--paper) (= --ds-bg). Auf --ds-surface mappen, damit z.B. im
+ *    glas/edel/stahl-Theme die Karte sichtbar bleibt. */
+.card,
+.acc-item,
+.konf-card,
+.wa-preview,
+.score-badge,
+.field input,
+.field textarea,
+.field select,
+.chip,
+.icon-btn {
+  background: var(--ds-surface);
+}
+
+/* 2) Lesbarer Text auf Akzent (Primary-/Step-/aktive Chip-Flaechen). Landing
+ *    hardcodet #fff auf --blau-Flaechen; bei hellen CI-Toenen unlesbar.
+ *    --ds-on-accent (contrast-color mit #fff-Fallback) ersetzt das #fff. */
+.btn { --fg: var(--ds-on-accent); }
+.chip[aria-pressed="true"],
+.hours-list li.today .pill,
+.step::before,
+.brand .brand-mark { color: var(--ds-on-accent); }
+
+/* 3) Body-Papierfaser-Textur aus dem Theme ziehen (template.css baeckt eine
+ *    feste Faser ins body-background-image). --ds-texture gewinnt; "none"
+ *    schaltet sie sauber ab (z.B. minimal/edel). */
+body { background-image: var(--ds-texture); }
+
+/* 4) Optionaler Theme-Font fuer Headlines, falls TENANT.font gesetzt ist.
+ *    whitelabel.js injiziert dafuer bereits eine eigene <style> mit
+ *    !important — hier nur als Sicherung, falls die Injection deaktiviert
+ *    wird: Headlines folgen --ds-font-display (ueber --display oben). */

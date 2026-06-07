@@ -9,9 +9,25 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Werkstatt" />
 
-    <!-- Design-System + Modul-Styles. Reines CSS, keine externen Fonts/CDNs. -->
+    <!-- Design-System: Tokens + Schriften ZUERST (damit --ds-*/--font-* existieren) -->
+    <link rel="stylesheet" href="assets/ds/werkstatt.theme.css" />
+    <link rel="stylesheet" href="assets/ds/fonts/fonts.css" />
+    <!-- Produkt-Styles -->
     <link rel="stylesheet" href="assets/template.css" />
     <link rel="stylesheet" href="modules/modules.css" />
+    <!-- White-Label-Adapter NACH den Produkt-Styles (gewinnt per Source-Order) -->
+    <link rel="stylesheet" href="assets/ds/landing-theme-adapter.css" />
+    <!-- Mandant + Pre-Paint-Theme (FOUC-frei) + White-Label-Engine (synchron) -->
+    <script src="tenant.js"></script>
+    <script>
+    (function(){var r=document.documentElement,T=window.TENANT||{},
+      A={papier:1,stahl:1,glas:1,edel:1,minimal:1},F={fraunces:1,playfair:1,space:1,inter:1,oswald:1},
+      t=String(T.theme||"papier").toLowerCase(),c=String(T.accent||T.farbeBlau||"").trim(),f=String(T.font||"").toLowerCase();
+      r.setAttribute("data-theme",A[t]?t:"papier");
+      if(/^#(?:[0-9a-f]{3,8})$/i.test(c)||/^(?:rgb|rgba|oklch|oklab)\(/i.test(c))r.style.setProperty("--cust-accent",c);
+      if(F[f])r.style.setProperty("--cust-font","var(--font-"+f+")");})();
+    </script>
+    <script src="assets/ds/whitelabel/whitelabel.js"></script>
   </head>
 
   <body>
@@ -438,7 +454,7 @@
          Live-Profil ist tenant.js. Fuer eine neue Werkstatt:
          tenant.example.js ueber tenant.js kopieren und Werte anpassen.
     ====================================================================== -->
-    <script src="tenant.js"></script>
+    <!-- tenant.js ist bereits im <head> geladen (vor dem Theme-Bootstrap) -->
     <script src="assets/template.js" defer></script>
     <script src="modules/fahrzeugschein.js" defer></script>
     <script src="modules/unfall.js" defer></script>

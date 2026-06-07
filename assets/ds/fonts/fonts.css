@@ -1,0 +1,20 @@
+/* =============================================================================
+ *  Selbst-gehostete Schriftarten (OFL-Lizenz, DSGVO-sicher).
+ *  KEIN externes Laden (kein Google-Fonts-CDN) — alle Dateien liegen lokal.
+ *  Pfade relativ zu dieser Datei (design-system/fonts/).
+ * ========================================================================== */
+@font-face{font-family:'Fraunces';src:url('Fraunces.woff2') format('woff2');font-weight:300 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url('SpaceGrotesk.woff2') format('woff2');font-weight:300 700;font-style:normal;font-display:swap}
+@font-face{font-family:'Playfair Display';src:url('PlayfairDisplay.woff2') format('woff2');font-weight:400 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Inter';src:url('Inter.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Oswald';src:url('Oswald.woff2') format('woff2');font-weight:200 700;font-style:normal;font-display:swap}
+
+/* Schrift-Registry als CSS-Variablen (vom Umschalter / tenant.js setzbar).
+ * Standard ist die Theme-Schrift; --cust-font ueberschreibt die Headlines. */
+:root{
+  --font-fraunces: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-playfair: 'Playfair Display', Georgia, serif;
+  --font-space:    'Space Grotesk', system-ui, sans-serif;
+  --font-inter:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-oswald:   'Oswald', 'Arial Narrow', system-ui, sans-serif;
+}
