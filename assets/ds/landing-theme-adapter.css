@@ -96,3 +96,6 @@ body { background-image: var(--ds-texture); }
  *    whitelabel.js injiziert dafuer bereits eine eigene <style> mit
  *    !important — hier nur als Sicherung, falls die Injection deaktiviert
  *    wird: Headlines folgen --ds-font-display (ueber --display oben). */
+/* ---- Politur: Ghost-/Sekundaer-Button-Kontrast pro Theme ---- */
+.btn--ghost{border-color:var(--ds-line-2)!important;color:var(--ds-text)!important}
+.btn--ghost:hover{background:var(--ds-surface-2)!important;border-color:var(--ds-text-soft)!important}
