@@ -1,0 +1,355 @@
+/* =============================================================================
+ *  modules.css — Styles fuer die zwei Automatisierungs-Module
+ *  (Fahrzeugschein-Erfassung + Unfall-Wizard).
+ *  Nutzt ausschliesslich die Design-Tokens aus template.css (kein Hardcode),
+ *  damit Umfaerben ueber tenant.js automatisch durchschlaegt.
+ * ========================================================================== */
+
+/* ----------------------------------------------------- gemeinsame Bausteine */
+.schein-card,
+.unfall-card {
+  max-width: 720px;
+  margin-inline: auto;
+}
+.schein-head h3,
+.unfall-head h3 {
+  margin: 0.3rem 0 0.4rem;
+}
+.schein-hint,
+.unfall-hint {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.2rem;
+}
+.schein-actions,
+.unfall-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+/* ----------------------------------------------------- Fahrzeugschein: Drop */
+.schein-drop {
+  border: 2px dashed var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  padding: 1.5rem;
+  text-align: center;
+  transition: border-color var(--dur-fast), background var(--dur-fast),
+    transform var(--dur-fast);
+  cursor: pointer;
+}
+.schein-drop:hover,
+.schein-drop:focus-visible {
+  border-color: var(--blau);
+}
+.schein-drop.drag {
+  border-color: var(--blau);
+  background: color-mix(in oklab, var(--blau) 8%, var(--paper));
+  transform: scale(1.01);
+}
+.schein-drop-empty strong {
+  color: var(--ink);
+}
+.schein-drop-empty small {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: var(--t-small);
+}
+.schein-preview {
+  margin: 0;
+}
+.schein-preview img {
+  max-height: 220px;
+  width: auto;
+  margin: 0 auto 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+}
+.schein-preview figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+.schein-remove {
+  border: 1px solid var(--line-2);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.8rem;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.schein-remove:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Felder */
+.schein-felder {
+  margin-top: 1.25rem;
+}
+.schein-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+.schein-status,
+.unfall-status {
+  min-height: 1.2em;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  margin: 0.4rem 0 0.8rem;
+}
+.schein-felder input[data-feld="vin"] {
+  letter-spacing: 0.05em;
+  font-family: var(--mono);
+}
+
+/* ------------------------------------------------------- Unfall: Fortschritt */
+.unfall-progress {
+  display: flex;
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  counter-reset: ufstep;
+  gap: 0.25rem;
+}
+.unfall-progress li {
+  flex: 1;
+  position: relative;
+  text-align: center;
+  font-size: var(--t-small);
+  color: var(--muted);
+  padding-top: 1.8rem;
+}
+.unfall-progress li::before {
+  counter-increment: ufstep;
+  content: counter(ufstep);
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--paper-3);
+  border: 1px solid var(--line-2);
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.unfall-progress li.active::before {
+  background: var(--blau);
+  border-color: var(--blau);
+  color: #fff;
+}
+.unfall-progress li.done::before {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: var(--ink);
+  content: "✓";
+}
+.unfall-progress li.active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Schritte */
+.unfall-step h4 {
+  font-family: var(--display);
+  margin: 1rem 0 0.6rem;
+}
+.unfall-step h4:first-child {
+  margin-top: 0;
+}
+.unfall-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+.unfall-note {
+  background: var(--paper-2);
+  border-left: 3px solid var(--blau);
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-sm);
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+/* Optionskarten (Schuldfrage) */
+.opt-cards {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 560px) {
+  .opt-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.opt-card {
+  text-align: left;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-2);
+  background: var(--paper);
+  color: var(--ink-soft);
+  transition: transform var(--dur-fast), border-color var(--dur-fast),
+    background var(--dur-fast);
+}
+.opt-card:hover {
+  transform: translateY(-2px);
+}
+.opt-card[aria-pressed="true"] {
+  border-color: var(--blau);
+  background: color-mix(in oklab, var(--blau) 8%, var(--paper));
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Checkboxen */
+.unfall-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6ch;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+.unfall-check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--blau);
+}
+
+/* Galerie */
+.unfall-galerie {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.unfall-thumb {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.unfall-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.unfall-thumb .schein-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  line-height: 1;
+  font-size: 1rem;
+}
+
+/* Smart-Flags */
+.unfall-flags {
+  margin-top: 1.2rem;
+  display: grid;
+  gap: 0.5rem;
+}
+.flag {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  border-left: 4px solid var(--line-2);
+  background: var(--paper-2);
+}
+.flag--alarm {
+  border-left-color: #c0392b;
+  background: color-mix(in oklab, #c0392b 10%, var(--paper));
+  color: var(--ink);
+  font-weight: 600;
+}
+.flag--warn {
+  border-left-color: var(--orange);
+  background: color-mix(in oklab, var(--orange) 14%, var(--paper));
+  color: var(--ink);
+}
+.flag--info {
+  border-left-color: var(--blau);
+  background: color-mix(in oklab, var(--blau) 8%, var(--paper));
+}
+
+/* Bericht-Vorschau */
+.unfall-report {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  color: var(--ink-soft);
+  max-height: 280px;
+  overflow: auto;
+}
+
+/* Navigation */
+.unfall-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+/* Skizze-Overlay (unfall-skizze) */
+.skizze-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(11, 13, 16, 0.6);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+.skizze-panel {
+  background: var(--paper);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow-lift);
+  max-width: 100%;
+}
+.skizze-panel canvas {
+  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  touch-action: none;
+  max-width: 100%;
+  display: block;
+}
+.skizze-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  justify-content: space-between;
+}
+
+/* Responsive Feinschliff */
+@media (max-width: 480px) {
+  .schein-row,
+  .unfall-grid {
+    grid-template-columns: 1fr;
+  }
+}

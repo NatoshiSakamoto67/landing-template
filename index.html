@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Titel/OG werden zur Laufzeit aus tenant.js gesetzt (template.js). -->
+    <title>Werkstatt Landing-Page</title>
+    <meta name="description" content="Termine, Fahrzeugschein und Unfallmeldung — alles online." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Werkstatt" />
+
+    <!-- Design-System + Modul-Styles. Reines CSS, keine externen Fonts/CDNs. -->
+    <link rel="stylesheet" href="assets/template.css" />
+    <link rel="stylesheet" href="modules/modules.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+    <!-- ===================================================== HEADER / NAV -->
+    <header class="site-header">
+      <div class="container nav">
+        <a class="brand" href="#hero" data-brand-logo aria-label="Startseite"></a>
+
+        <nav aria-label="Hauptnavigation">
+          <ul class="nav-links" id="nav-links">
+            <li><a href="#leistungen">Leistungen</a></li>
+            <li><a href="#termin">Termin</a></li>
+            <li><a href="#fahrzeugschein">Fahrzeugschein</a></li>
+            <li><a href="#unfall">Unfall</a></li>
+            <li><a href="#standort">Standort</a></li>
+          </ul>
+        </nav>
+
+        <div class="nav-actions">
+          <button
+            class="icon-btn"
+            id="mode-toggle"
+            type="button"
+            aria-label="Hell / Dunkel / Schwarz-Weiss umschalten"
+            title="Darstellung umschalten"
+          >◐</button>
+          <a class="btn btn--sm" data-wa-link href="#" aria-label="WhatsApp">WhatsApp</a>
+          <button
+            class="icon-btn burger"
+            id="burger"
+            type="button"
+            aria-label="Menue oeffnen"
+            aria-expanded="false"
+            aria-controls="nav-links"
+          >☰</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ====================================================== HERO -->
+      <section class="hero" id="hero" aria-labelledby="hero-heading">
+        <div class="container hero-grid">
+          <div>
+            <span class="overline">Meisterwerkstatt</span>
+            <h1 id="hero-heading">
+              <span data-brand-name>Werkstatt</span><br />
+              <span class="accent" data-brand-claim>Ihr Auto in besten Haenden.</span>
+            </h1>
+            <p class="lede" data-brand-claim>Ihr Auto in besten Haenden.</p>
+            <div class="hero-cta">
+              <a class="btn" href="#termin">Termin anfragen</a>
+              <a class="btn btn--ghost" data-wa-link href="#">Per WhatsApp</a>
+              <a class="btn btn--ghost" data-tel-link href="#">Anrufen</a>
+            </div>
+          </div>
+
+          <!-- Hero-Visual: Foto aus TENANT.heroPhoto, sonst Platzhalter. -->
+          <div class="hero-visual" id="hero-visual" role="img" aria-label="Werkstatt">
+            <div class="glass-bar" aria-hidden="true">
+              <div><b>4.9★</b><span>Google</span></div>
+              <div><b>Alle</b><span>Marken</span></div>
+              <div><b>&lt;1h</b><span>Antwort</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================== STATS -->
+      <section class="stats" aria-label="Kennzahlen">
+        <div class="container">
+          <div class="grid cols-3" id="stats-grid"></div>
+        </div>
+      </section>
+
+      <!-- ============================== ABLAUF IN 3 SCHRITTEN (vor Eingabe) -->
+      <section aria-labelledby="ablauf-heading">
+        <div class="container">
+          <div class="section-head reveal">
+            <span class="overline">So einfach gehts</span>
+            <h2 id="ablauf-heading">In 3 Schritten zum Termin</h2>
+          </div>
+          <div class="grid cols-3 steps">
+            <div class="step reveal">
+              <h3>Leistung waehlen</h3>
+              <p>Sagen Sie uns, worum es geht — von Inspektion bis Unfall.</p>
+            </div>
+            <div class="step reveal">
+              <h3>Wunschtag nennen</h3>
+              <p>Sie schlagen einen Tag vor, wir bestaetigen den passenden Slot.</p>
+            </div>
+            <div class="step reveal">
+              <h3>Fertig</h3>
+              <p>Anfrage per WhatsApp absenden — wir melden uns umgehend zurueck.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================ TERMIN-KONFIGURATOR -->
+      <section class="konf" id="termin" aria-labelledby="termin-heading">
+        <div class="container">
+          <div class="section-head reveal" style="margin-inline:auto;text-align:center">
+            <span class="overline">Termin-Konfigurator</span>
+            <h2 id="termin-heading">Termin in unter einer Minute anfragen</h2>
+          </div>
+
+          <div class="card konf-card" id="konfigurator">
+            <div class="konf-progress" aria-hidden="true">
+              <span class="dot active"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+
+            <!-- Schritt 1: Leistung -->
+            <div class="konf-step active" aria-label="Schritt 1: Leistung">
+              <h3>Welche Leistung brauchen Sie?</h3>
+              <p style="color:var(--muted)">Mehrfachauswahl moeglich.</p>
+              <div class="chips" id="konf-chips"></div>
+            </div>
+
+            <!-- Schritt 2: Wunschtag -->
+            <div class="konf-step" aria-label="Schritt 2: Wunschtag">
+              <h3>Wann passt es Ihnen?</h3>
+              <div class="field">
+                <label for="konf-wunschtag">Wunschtag</label>
+                <input type="date" id="konf-wunschtag" />
+              </div>
+              <div class="field">
+                <label for="konf-bemerkung">Bemerkung (optional)</label>
+                <textarea id="konf-bemerkung" rows="2" placeholder="z. B. Geraeusch beim Bremsen"></textarea>
+              </div>
+            </div>
+
+            <!-- Schritt 3: Schein + Kontakt -->
+            <div class="konf-step" aria-label="Schritt 3: Fahrzeug & Kontakt">
+              <h3>Fahrzeug & Kontakt</h3>
+              <div class="field">
+                <label for="konf-name">Name</label>
+                <input type="text" id="konf-name" autocomplete="name" placeholder="Vor- und Nachname" />
+              </div>
+              <div class="field">
+                <label for="konf-telefon">Telefon</label>
+                <input type="tel" id="konf-telefon" autocomplete="tel" placeholder="Fuer die Rueckmeldung" />
+              </div>
+              <p style="color:var(--muted);font-size:.9rem">
+                Optional: Fahrzeugschein gleich miterfassen — beschleunigt die Bearbeitung.
+              </p>
+              <!-- Fahrzeugschein-Modul kann direkt unten genutzt werden;
+                   onScheinReady fliesst automatisch in diese Anfrage ein. -->
+            </div>
+
+            <!-- Live-WhatsApp-Vorschau -->
+            <div class="wa-preview" aria-live="polite">
+              <div class="wa-head">▸ Vorschau Ihrer WhatsApp-Anfrage</div>
+              <pre id="konf-wa-text"></pre>
+            </div>
+
+            <p id="konf-msg" aria-live="polite" style="min-height:1.2em;margin:.6rem 0 0"></p>
+
+            <div class="konf-nav">
+              <button class="btn btn--ghost" id="konf-prev" type="button">Zurueck</button>
+              <button class="btn" id="konf-next" type="button">Weiter</button>
+              <button class="btn btn--warm" id="konf-submit" type="button" style="display:none">
+                Anfrage senden
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================== MODUL 1: FAHRZEUGSCHEIN -->
+      <section id="fahrzeugschein" aria-labelledby="schein-heading">
+        <div class="container">
+          <div class="section-head reveal" style="margin-inline:auto;text-align:center">
+            <span class="overline">Automatisierung</span>
+            <h2 id="schein-heading">Fahrzeugschein digital erfassen</h2>
+            <p class="lede" style="margin-inline:auto">
+              Foto aufnehmen, Felder pruefen, fertig. Spart Zeit beim Termin und in der Werkstatt.
+            </p>
+          </div>
+          <!-- Mount-Punkt: fahrzeugschein.js haengt sich hier ein. -->
+          <div id="fahrzeugschein-mount"></div>
+        </div>
+      </section>
+
+      <!-- ============================================= MODUL 2: UNFALL -->
+      <section id="unfall" aria-labelledby="unfall-heading" style="background:var(--paper-2);border-block:1px solid var(--line)">
+        <div class="container">
+          <div class="section-head reveal" style="margin-inline:auto;text-align:center">
+            <span class="overline">Automatisierung</span>
+            <h2 id="unfall-heading">Unfall? Schaden in Minuten melden</h2>
+            <p class="lede" style="margin-inline:auto">
+              Gefuehrter Assistent: Hergang, Beteiligte, Fotos. Wir uebernehmen die Abwicklung.
+            </p>
+          </div>
+          <!-- Mount-Punkt: unfall.js haengt sich hier ein. -->
+          <div id="unfall-mount"></div>
+        </div>
+      </section>
+
+      <!-- ====================================================== LEISTUNGEN -->
+      <section id="leistungen" aria-labelledby="leistungen-heading">
+        <div class="container">
+          <div class="section-head reveal">
+            <span class="overline">Was wir koennen</span>
+            <h2 id="leistungen-heading">Leistungen</h2>
+          </div>
+          <div class="accordion" id="leistungen-accordion"></div>
+        </div>
+      </section>
+
+      <!-- ====================================================== STATEMENT -->
+      <section class="statement reveal" aria-label="Versprechen">
+        <div class="container">
+          <blockquote>Ehrliche Arbeit. Klare Preise. Technik, die haelt.</blockquote>
+          <footer data-brand-name>Werkstatt</footer>
+        </div>
+      </section>
+
+      <!-- ======================================================= UEBER UNS -->
+      <section aria-labelledby="about-heading">
+        <div class="container grid cols-2" style="align-items:start">
+          <div class="reveal">
+            <span class="overline">Ueber uns</span>
+            <h2 id="about-heading">Ueber uns</h2>
+          </div>
+          <div class="reveal" id="about-body"></div>
+        </div>
+      </section>
+
+      <!-- ===================================================== KUNDENSTIMMEN -->
+      <section aria-labelledby="reviews-heading" style="background:var(--paper-2);border-block:1px solid var(--line)">
+        <div class="container">
+          <div class="section-head reveal" style="text-align:center;margin-inline:auto">
+            <span class="overline">Kundenstimmen</span>
+            <h2 id="reviews-heading">Was Kundinnen und Kunden sagen</h2>
+            <div id="reviews-head"></div>
+          </div>
+          <div class="grid cols-3" id="reviews-grid"></div>
+        </div>
+      </section>
+
+      <!-- ========================================================= TEAM -->
+      <section aria-labelledby="team-heading">
+        <div class="container">
+          <div class="section-head reveal" style="text-align:center;margin-inline:auto">
+            <span class="overline">Ihr Team</span>
+            <h2 id="team-heading">Ihre Ansprechpartner</h2>
+          </div>
+          <div class="grid cols-3" id="team-grid"></div>
+        </div>
+      </section>
+
+      <!-- ======================================================== STANDORT -->
+      <section id="standort" aria-labelledby="standort-heading" style="background:var(--paper-2);border-block:1px solid var(--line)">
+        <div class="container">
+          <div class="section-head reveal">
+            <span class="overline">So finden Sie uns</span>
+            <h2 id="standort-heading">Standort & Anfahrt</h2>
+          </div>
+          <div class="standort-grid">
+            <div class="reveal">
+              <address style="font-style:normal;font-size:1.1rem;line-height:1.7" data-address></address>
+              <p style="margin-top:1rem">
+                <a class="btn btn--ghost btn--sm" data-tel-link href="#">Anrufen</a>
+                <a class="btn btn--ghost btn--sm" data-maps-link href="#">Route planen</a>
+              </p>
+              <h3 style="margin-top:1.5rem;font-size:1.1rem">Oeffnungszeiten</h3>
+              <ul class="hours-list" id="hours-list"></ul>
+            </div>
+            <!-- DSGVO-freie OpenStreetMap-Einbettung (kein Google-Tracking). -->
+            <div class="map-embed" id="map-embed" aria-label="Karte"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================== FAQ -->
+      <section aria-labelledby="faq-heading">
+        <div class="container">
+          <div class="section-head reveal">
+            <span class="overline">Haeufige Fragen</span>
+            <h2 id="faq-heading">FAQ</h2>
+          </div>
+          <div class="accordion" id="faq-accordion"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ======================================================== FOOTER -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <a class="brand" href="#hero" data-brand-logo></a>
+            <p style="color:var(--muted);margin-top:.8rem" data-brand-claim></p>
+          </div>
+          <div>
+            <h4>Navigation</h4>
+            <ul>
+              <li><a href="#leistungen">Leistungen</a></li>
+              <li><a href="#termin">Termin</a></li>
+              <li><a href="#fahrzeugschein">Fahrzeugschein</a></li>
+              <li><a href="#unfall">Unfall melden</a></li>
+              <li><a href="#standort">Standort</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Kontakt</h4>
+            <ul>
+              <li><a data-tel-link href="#">Telefon</a></li>
+              <li><a data-wa-link href="#">WhatsApp</a></li>
+              <li><address style="font-style:normal" data-address></address></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Rechtliches</h4>
+            <ul>
+              <li><a data-impressum href="#">Impressum</a></li>
+              <li><a data-datenschutz href="#">Datenschutz</a></li>
+            </ul>
+            <p style="color:var(--muted);font-size:var(--t-small);margin-top:.8rem">
+              Hinweis: WhatsApp-Anfragen verlassen das Geraet erst beim Senden.
+            </p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© <span id="footer-year"></span> <span data-brand-name></span></span>
+          <span>Erstellt mit dem Werkstatt-Landing-Template</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- WhatsApp-Float -->
+    <a class="wa-float" data-wa-link href="#" aria-label="WhatsApp Chat oeffnen">
+      <span aria-hidden="true">✆</span> Chat
+    </a>
+
+    <!-- =====================================================================
+         Optionales Skizze-Modul (Inline, Feature-Detection durch unfall.js).
+         Kleines Canvas zum Zeichnen von Strassen/Pfeilen -> liefert PNG-Blob
+         in DENSELBEN Foto-/Attachment-Kanal des Unfall-Wizards.
+         Bewusst inline gehalten, damit das Template ohne Zusatzdatei laeuft.
+    ====================================================================== -->
+    <script>
+      (function () {
+        "use strict";
+        function open(onDone) {
+          var overlay = document.createElement("div");
+          overlay.className = "skizze-overlay";
+          overlay.setAttribute("role", "dialog");
+          overlay.setAttribute("aria-label", "Unfallskizze zeichnen");
+          overlay.innerHTML =
+            '<div class="skizze-panel">' +
+            '<canvas width="520" height="360"></canvas>' +
+            '<div class="skizze-toolbar">' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-act="clear">Loeschen</button>' +
+            '<span><button type="button" class="btn btn--ghost btn--sm" data-act="cancel">Abbrechen</button> ' +
+            '<button type="button" class="btn btn--sm" data-act="save">Uebernehmen</button></span>' +
+            "</div></div>";
+          document.body.appendChild(overlay);
+
+          var canvas = overlay.querySelector("canvas");
+          var ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "#0B0D10";
+
+          var drawing = false, last = null;
+          function pos(e) {
+            var r = canvas.getBoundingClientRect();
+            var p = e.touches ? e.touches[0] : e;
+            return {
+              x: (p.clientX - r.left) * (canvas.width / r.width),
+              y: (p.clientY - r.top) * (canvas.height / r.height),
+            };
+          }
+          function start(e) { drawing = true; last = pos(e); e.preventDefault(); }
+          function move(e) {
+            if (!drawing) return;
+            var p = pos(e);
+            ctx.beginPath();
+            ctx.moveTo(last.x, last.y);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            last = p;
+            e.preventDefault();
+          }
+          function end() { drawing = false; }
+          canvas.addEventListener("mousedown", start);
+          canvas.addEventListener("mousemove", move);
+          window.addEventListener("mouseup", end);
+          canvas.addEventListener("touchstart", start, { passive: false });
+          canvas.addEventListener("touchmove", move, { passive: false });
+          canvas.addEventListener("touchend", end);
+
+          function close() { overlay.remove(); }
+          overlay.querySelector('[data-act="clear"]').addEventListener("click", function () {
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          });
+          overlay.querySelector('[data-act="cancel"]').addEventListener("click", close);
+          overlay.querySelector('[data-act="save"]').addEventListener("click", function () {
+            canvas.toBlob(function (blob) {
+              if (blob && typeof onDone === "function") onDone(blob);
+              close();
+            }, "image/png");
+          });
+          overlay.addEventListener("click", function (e) {
+            if (e.target === overlay) close();
+          });
+        }
+        window.UnfallSkizze = { open: open };
+      })();
+    </script>
+
+    <!-- =====================================================================
+         Reihenfolge wichtig: zuerst das Tenant-Profil, dann der Kern,
+         dann die Module. KEIN Build, keine externen CDNs.
+         Live-Profil ist tenant.js. Fuer eine neue Werkstatt:
+         tenant.example.js ueber tenant.js kopieren und Werte anpassen.
+    ====================================================================== -->
+    <script src="tenant.js"></script>
+    <script src="assets/template.js" defer></script>
+    <script src="modules/fahrzeugschein.js" defer></script>
+    <script src="modules/unfall.js" defer></script>
+  </body>
+</html>
