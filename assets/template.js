@@ -52,6 +52,19 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c];
     });
   }
+  // Tenant-Konfig-Links (Maps/Datenschutz/Impressum) gegen javascript:/data:-Schemata
+  // absichern. Erlaubt http(s)/mailto/tel + relative Pfade, sonst "#".
+  function safeLinkUrl(u) {
+    if (typeof u !== "string" || !u) return "#";
+    var s = u.trim();
+    try {
+      var p = new URL(s, document.baseURI);
+      if (["http:", "https:", "mailto:", "tel:"].indexOf(p.protocol) !== -1) return s;
+      return "#";
+    } catch (e) {
+      return "#";
+    }
+  }
 
   /* ============================================================ 1) THEME */
   function setzeTheme() {
@@ -300,9 +313,9 @@
         esc(T.name) + "<br>" + esc(a.strasse) + "<br>" + esc(a.plz) + " " + esc(a.ort);
     });
     document.querySelectorAll("[data-maps-link]").forEach(function (a) {
-      a.href = T.mapsUrl || "#";
+      a.href = safeLinkUrl(T.mapsUrl);
       a.target = "_blank";
-      a.rel = "noopener";
+      a.rel = "noopener noreferrer";
     });
 
     // DSGVO-freie OpenStreetMap-Einbettung (kein Google-Tracking).
@@ -648,10 +661,10 @@
     var y = mount("footer-year");
     if (y) y.textContent = new Date().getFullYear();
     document.querySelectorAll("[data-datenschutz]").forEach(function (a) {
-      a.href = T.datenschutzHref || "#";
+      a.href = safeLinkUrl(T.datenschutzHref);
     });
     document.querySelectorAll("[data-impressum]").forEach(function (a) {
-      a.href = T.impressumHref || "#";
+      a.href = safeLinkUrl(T.impressumHref);
     });
   }
 

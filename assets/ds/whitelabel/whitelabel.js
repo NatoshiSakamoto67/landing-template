@@ -64,6 +64,21 @@
   function isObj(v) { return v !== null && typeof v === "object"; }
   function isStr(v) { return typeof v === "string" && v.length > 0; }
 
+  // Logo-URL aus Tenant-Konfig: nur sichere Schemata (http(s)/data:image, relative
+  // Pfade). Blockt javascript:/vbscript:/data:text in White-Label-Configs.
+  function safeImageUrl(u) {
+    if (!isStr(u)) return "";
+    var s = u.trim();
+    try {
+      var parsed = new URL(s, document.baseURI);
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") return s;
+      if (parsed.protocol === "data:" && /^data:image\//i.test(s)) return s;
+      return "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   // Erster nicht-leerer Wert aus der Argumentliste (string|number).
   function firstOf() {
     for (var i = 0; i < arguments.length; i++) {
@@ -206,11 +221,12 @@
     var slots = document.querySelectorAll('[data-tenant="logo"]');
     for (var i = 0; i < slots.length; i++) {
       var slot = slots[i];
-      if (isStr(t.logo)) {
+      var logoUrl = safeImageUrl(t.logo);
+      if (logoUrl) {
         // Echtes Logo als <img>. src/alt werden als Properties gesetzt, nicht
-        // als HTML — kein innerHTML mit Tenant-Daten.
+        // als HTML — kein innerHTML mit Tenant-Daten. URL schema-validiert.
         var img = document.createElement("img");
-        img.src = t.logo;          // Browser validiert/encodet die URL
+        img.src = logoUrl;          // nur http(s)/data:image/* (siehe safeImageUrl)
         img.alt = t.name || "Logo"; // textbasiert, kein Markup
         img.decoding = "async";
         slot.textContent = "";      // vorhandenen Inhalt sicher leeren
